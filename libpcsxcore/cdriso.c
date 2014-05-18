@@ -1508,7 +1508,7 @@ int aropen(FILE* fparchive, const char* _fn) {
 		archive_read_open_filename(a, _fn, 75*CD_FRAMESIZE_RAW);
 		if (r != ARCHIVE_OK) {
 			SysPrintf("Archive open failed (%i).\n", r);
-			archive_read_free(a);
+			archive_read_finish(a);
 			a = NULL;
 			return -1;
 		}
@@ -1519,7 +1519,7 @@ int aropen(FILE* fparchive, const char* _fn) {
 			length = MAX(length_peek, length);
 			ae = (ae == NULL ? ae_peek : ae);
 		}
-		archive_read_free(a);
+		archive_read_finish(a);
 		if (ae == NULL) {
 			SysPrintf("Archive entry read failed (%i).\n", r);
 			a = NULL;
@@ -1587,7 +1587,7 @@ static int cdread_archive(FILE *f, unsigned int base, void *dest, int sector)
 			fwrite(buff, size, 1, cdimage_buffer);
 			if (r != ARCHIVE_OK) {
 				//SysPrintf("End of archive.\n");
-				archive_read_free(a);
+				archive_read_finish(a);
 				a = NULL;
 				readsize = offset;
 				fflush(cdimage_buffer);
@@ -1814,7 +1814,7 @@ static long CALLBACK ISOshutdown(void) {
 		cdimage_buffer_mem = NULL;
 		cdimage_buffer = NULL;
 		if (a) {
-			archive_read_free(a);
+			archive_read_finish(a);
 			a = NULL;
 		}
 	}
