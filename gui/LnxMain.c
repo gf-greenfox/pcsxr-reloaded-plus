@@ -276,7 +276,10 @@ int main(int argc, char *argv[]) {
 	int runcd = RUN;
 	int loadst = -1;
 	int i;
-
+	//gchar *
+	cfgfile_basename = g_build_filename (getenv("HOME"), PCSXR_DOT_DIR , NULL);
+	//gchar *
+	cfgfile = g_build_filename( cfgfile_basename , "pcsxr.cfg" , NULL);
 #ifdef ENABLE_NLS
 	setlocale (LC_ALL, "");
 	bindtextdomain (GETTEXT_PACKAGE, LOCALE_DIR);
@@ -288,8 +291,6 @@ int main(int argc, char *argv[]) {
 
 	// what is the name of the config file?
 	// it may be redefined by -cfg on the command line
-	strcpy(cfgfile_basename, "pcsxr.cfg");
-
 	// read command line options
 	for (i = 1; i < argc; i++) {
 		if (!strcmp(argv[i], "-runcd")) runcd = RUN_CD;
@@ -299,8 +300,10 @@ int main(int argc, char *argv[]) {
 		else if (!strcmp(argv[i], "-load")) loadst = ((argc > i+1) ? atol(argv[++i]) : 0);
 		else if (!strcmp(argv[i], "-cfg")) {
 			if (i+1 >= argc) break;
-			strncpy(cfgfile_basename, argv[++i], MAXPATHLEN-100);	/* TODO buffer overruns */
-			printf("Using config file %s.\n", cfgfile_basename);
+			g_free( cfgfile );
+			cfgfile = g_build_filename ( argv[++i] , NULL);
+			// do not foreget to free cfgfile later!!!		
+			printf("Using config file %s.\n", cfgfile);
 		}
 		else if (!strcmp(argv[i], "-cdfile")) {
 			char isofilename[MAXPATHLEN];
@@ -337,6 +340,9 @@ int main(int argc, char *argv[]) {
 							"\t-load STATENUM\tLoads savestate STATENUM (1-9)\n"
 							"\t-h -help\tDisplay this message\n"
 							"\tfile\t\tLoads file\n"));
+			 //clean up after our mess
+			 g_free( cfgfile );
+			 g_free( cfgfile_basename );
 			 return 0;
 		} else {
 			strncpy(file, argv[i], MAXPATHLEN);
@@ -364,6 +370,9 @@ int main(int argc, char *argv[]) {
 	if (LoadConfig() == -1) {
 		if (!UseGui) {
 			printf(_("PCSXR cannot be configured without using the GUI -- you should restart without -nogui.\n"));
+			//clean up after our mess
+			g_free( cfgfile );
+			g_free( cfgfile_basename );
 			return 1;
 		}
 
@@ -413,7 +422,12 @@ int main(int argc, char *argv[]) {
 
 	if (UseGui && runcd != RUN_CD) SetIsoFile(NULL);
 
-	if (SysInit() == -1) return 1;
+	if (SysInit() == -1){
+		//clean up after our mess
+		g_free( cfgfile );
+		g_free( cfgfile_basename );
+		return 1;
+	}
 
 	if (UseGui && runcd != RUN_CD) {
 		StartGui();
@@ -421,10 +435,16 @@ int main(int argc, char *argv[]) {
 		// the following only occurs if the gui isn't started
 		if (LoadPlugins() == -1) {
 			SysErrorMessage(_("Error"), _("Failed loading plugins!"));
+			//clean up after our mess
+			g_free( cfgfile );
+			g_free( cfgfile_basename );
 			return 1;
 		}
 
 		if (OpenPlugins() == -1 || plugins_configured() == FALSE) {
+			//clean up after our mess
+			g_free( cfgfile );
+			g_free( cfgfile_basename );
 			return 1;
 		}
 
@@ -440,6 +460,9 @@ int main(int argc, char *argv[]) {
 				if (LoadCdrom() == -1) {
 					ClosePlugins();
 					printf(_("Could not load CD-ROM!\n"));
+					//clean up after our mess
+					g_free( cfgfile );
+					g_free( cfgfile_basename );
 					return -1;
 				}
 			}
@@ -460,7 +483,9 @@ int main(int argc, char *argv[]) {
 		autoloadCheats();
 		psxCpu->Execute();
 	}
-
+	
+	g_free( cfgfile );
+	g_free( cfgfile_basename );
 	return 0;
 }
 

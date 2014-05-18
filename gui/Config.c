@@ -76,24 +76,24 @@ int LoadConfig(PcsxConfig *Conf) {
 	FILE *f;
 	int size;
 	char *data;
-
-	/* TODO local var called cfgfile */
-
-	// Ryan says: use dotdir, dotdir is GOOD
-	// No giant homedir names
-	strncpy(cfgfile, getenv("HOME"), 200);
-	strcat(cfgfile, PCSXR_DOT_DIR);
-
-	// proceed to load the cfg file
-	// append its name
-	strcat(cfgfile, cfgfile_basename);
-
-	// file is  now ~/.pcsxr/pcsxr.cfg (or whatever cfgfile_basename is)
+	gchar *tmp;
+	
 	if (stat(cfgfile, &buf) == -1) {
 		// the config file doesn't exist!
-		/* TODO Error checking? */
-		printf("Configuration file %s couldn't be found\n", cfgfile);
-		return -1;
+		// Try again, appending cfgfile_basename 
+		tmp = g_build_filename( cfgfile_basename , cfgfile , NULL);
+		if (stat(tmp , &buf) == -1){
+			printf("Configuration file %s couldn't be found\n", cfgfile);
+			g_free( tmp );
+			return -1;
+		}
+		// The asked cfg file was in short form, under home/PCSXR_DOT_DIR
+		g_free( cfgfile );
+		cfgfile = g_strdup( tmp );
+		g_free( tmp );
+		// cfgfile will be freed at main();
+		printf("Using configuration file %s\n", cfgfile);
+		
 	}
 
 	size = buf.st_size;

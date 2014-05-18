@@ -39,8 +39,9 @@
 
 extern gboolean UseGui;
 extern int StatesC;
-char cfgfile[MAXPATHLEN];	/* ADB Comment this out - make a local var, or at least use gchar funcs */
-char cfgfile_basename[MAXPATHLEN];	/* ADB Comment this out - make a local var, or at least use gchar funcs */
+gchar *cfgfile;
+gchar *cfgfile_basename;
+// Note that we really should have this handled in the main(). no need to be global, if LoadConfig()/SaveConvig() is fixed.
 
 int LoadConfig();
 void SaveConfig();
